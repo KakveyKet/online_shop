@@ -34,12 +34,19 @@ router.post('/register', async (req, res) => {
 });
 
 // Route to get all users
-router.get('/getuser', async (req, res) => {
+// Example route to get users with pagination
+app.get('/api/users', async (req, res) => {
     try {
-        const users = await User.find();
-        res.status(200).json(users);
-    } catch (error) {
-        res.status(500).json({ error: 'Error fetching users', details: error.message });
+        const page = parseInt(req.query.page) || 1;  // Default to page 1 if no page query
+        const limit = 10; // Number of users per page
+
+        const users = await User.find() // Assuming you have a User model
+            .skip((page - 1) * limit)
+            .limit(limit);
+
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ error: 'Error fetching users', details: err.message });
     }
 });
 

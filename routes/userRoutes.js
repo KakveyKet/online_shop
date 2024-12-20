@@ -35,7 +35,7 @@ router.post('/register', async (req, res) => {
 
 // Route to get all users
 // Example route to get users with pagination
-app.get('/api/users', async (req, res) => {
+router.get('/api/users', async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;  // Default to page 1 if no page query
         const limit = 10; // Number of users per page

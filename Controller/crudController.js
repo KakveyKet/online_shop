@@ -1,7 +1,5 @@
-const mongoose = require('mongoose');
-const User = require('../Models/User');  // Import the User model
 const Product = require('../Models/productModel');  // Import the Product model
-
+const User = require('../Models/User');  // Import the User model
 // Dynamically load the model for the collection
 const loadModel = (collection) => {
     switch (collection) {
@@ -25,6 +23,7 @@ const dynamicCrudController = (collection) => {
         // Create a new item
         create: async (req, res) => {
             try {
+                // Create a new user with the request body
                 const newItem = new model(req.body);
                 const savedItem = await newItem.save();
                 res.status(201).json(savedItem);
@@ -32,6 +31,7 @@ const dynamicCrudController = (collection) => {
                 res.status(400).json({ error: 'Error creating item', details: err });
             }
         },
+
 
         // Get all items
         getAll: async (req, res) => {

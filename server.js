@@ -4,6 +4,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const dynamicRoute = require('./routes/dynamicRoutes')
+const authRoute = require('./routes/userRoutes')
 const cors = require('cors');
 
 // Load environment variables
@@ -19,8 +20,7 @@ app.use(express.json());
 mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 30000,  // 30 seconds timeout
-    socketTimeoutMS: 30000,           // 30 seconds timeout
+
 })
     .then(() => console.log('MongoDB connected'))
     .catch((err) => console.log('MongoDB connection error:', err));
@@ -32,7 +32,7 @@ app.get('/', (req, res) => {
 
 // Use user routes
 app.use('/api', dynamicRoute);
-
+app.use('/api', authRoute);
 // Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

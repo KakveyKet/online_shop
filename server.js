@@ -3,17 +3,18 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const userRoutes = require('./routes/userRoutes'); // Adjust this path as needed
+const dynamicRoute = require('./routes/dynamicRoutes')
+const cors = require('cors');
 
 // Load environment variables
 dotenv.config();
 
 // Initialize express app
 const app = express();
+app.use(cors()); // Allow all origins or configure as needed
 
 // Middleware to parse JSON
 app.use(express.json());
-
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
@@ -30,7 +31,7 @@ app.get('/', (req, res) => {
 });
 
 // Use user routes
-app.use('/api/users', userRoutes);
+app.use('/api', dynamicRoute);
 
 // Start server
 const PORT = process.env.PORT || 5000;

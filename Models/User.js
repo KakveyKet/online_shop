@@ -16,6 +16,13 @@ const userSchema = new mongoose.Schema({
     },
 }, { timestamps: true });
 
+userSchema.add({
+    fullName: {
+        type: String,
+        required: false,
+    }
+});
+
 const User = mongoose.model('User', userSchema);
 
-module.exports = User;
+module.exports = User;  // Ensure this line is correct

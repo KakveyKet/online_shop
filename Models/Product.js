@@ -15,14 +15,18 @@ const productSchema = new mongoose.Schema({
         required: true,
     },
     image: {
-        type: String, // Assuming you store the image URL as a string
-        required: true,
-    },
-    code: {
         type: String,
         required: true,
-        unique: true,
     },
+    description: {
+        type: String,
+        required: true,
+    },
+    stock: {
+        type: Number,
+        required: true,
+    },
+
 }, { timestamps: true });
 
 const Product = mongoose.model('Product', productSchema);

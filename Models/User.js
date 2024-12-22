@@ -34,6 +34,11 @@ const userSchema = new mongoose.Schema({
         required: false, // Optional field
         default: null,  // Default to null if no image is provided
     },
+    phoneNumber: {
+        type: String,
+        required: false, // Optional field
+        default: null,  // Default to null if no image is provided
+    },
 }, { timestamps: true });
 
 userSchema.add({

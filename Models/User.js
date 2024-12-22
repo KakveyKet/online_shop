@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema({
         default: true,
     },
     profileImage: {
-        type: String, // URL or path to the profile image
+        type: String,
         required: false, // Optional field
         default: null,  // Default to null if no image is provided
     },

@@ -1,0 +1,3 @@
+    cloud_name: 'dvljcimlz',
+    api_key: '317225253168774',
+    api_secret: '0TWwoDFETsFVugbMQ7jaQfJSxc4',

@@ -52,23 +52,66 @@ const dynamicCrudController = (collection) => {
         // Get all items
         getAll: async (req, res) => {
             try {
-                const items = await model.find();
-                res.status(200).json(items);
+                const { page = 1, limit = 10, searchColumn = [], ...filters } = req.query;
+                let searchColumnArray = Array.isArray(searchColumn) ? searchColumn : searchColumn.split(',');
+
+                // Validate and parse pagination parameters
+                const pageNumber = Math.max(parseInt(page, 10), 1); // Ensure page is at least 1
+                const limitNumber = Math.min(Math.max(parseInt(limit, 10), 1), 100); // Limit between 1 and 100
+
+                // Build query conditions
+                const queryConditions = [];
+
+                // Handle status filter
+                if (filters.status) {
+                    queryConditions.push({ status: filters.status === "true" });
+                }
+
+                // Handle dynamic search columns (e.g., name, email)
+                if (searchColumnArray.length > 0 && filters.search) {
+                    const searchQuery = { $regex: filters.search, $options: "i" };
+                    searchColumnArray.forEach(column => {
+                        queryConditions.push({ [column]: searchQuery });
+                    });
+                }
+
+                const finalQuery = queryConditions.length > 0 ? { $and: queryConditions } : {};
+
+                // Fetch paginated data
+                const items = await model
+                    .find(finalQuery)
+                    .skip((pageNumber - 1) * limitNumber)
+                    .limit(limitNumber);
+
+                // Count total items
+                const totalItems = await model.countDocuments(finalQuery);
+
+                // Respond with paginated data
+                res.status(200).json({
+                    data: items,
+                    currentPage: pageNumber,
+                    totalPages: Math.ceil(totalItems / limitNumber),
+                    totalItems,
+                });
             } catch (err) {
-                res.status(500).json({ error: "Error fetching items", details: err });
+                res.status(500).json({
+                    error: "Error fetching items",
+                    details: err.message,
+                });
             }
         },
 
+
         // Get a single item by ID
-        getOne: async (req, res) => {
-            try {
-                const item = await model.findById(req.params.id);
-                if (!item) return res.status(404).json({ error: "Item not found" });
-                res.status(200).json(item);
-            } catch (err) {
-                res.status(500).json({ error: "Error fetching item", details: err });
-            }
-        },
+        // getOne: async (req, res) => {
+        //     try {
+        //         const item = await model.findById(req.params.id);
+        //         if (!item) return res.status(404).json({ error: "Item not found" });
+        //         res.status(200).json(item);
+        //     } catch (err) {
+        //         res.status(500).json({ error: "Error fetching item", details: err });
+        //     }
+        // },
         // Update an item by ID
         update: async (req, res) => {
             upload.single("image")(req, res, async (err) => {
@@ -113,10 +156,6 @@ const dynamicCrudController = (collection) => {
                 res.status(500).json({ error: "Error deleting item", details: err });
             }
         },
-
-        // Get filtered data
-
-
     };
 };
 

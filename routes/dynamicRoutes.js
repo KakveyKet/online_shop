@@ -12,7 +12,7 @@ collections.forEach((collection) => {
     if (controller) {
         router.post(`/${collection}`, controller.create);
         router.get(`/${collection}`, controller.getAll);
-        router.get(`/${collection}/:id`, controller.getOne);
+        // router.get(`/${collection}/:id`, controller.getOne);
         router.patch(`/${collection}/:id`, controller.update);
         router.delete(`/${collection}/:id`, controller.delete);
     }

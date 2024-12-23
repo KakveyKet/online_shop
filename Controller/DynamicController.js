@@ -3,7 +3,6 @@ const User = require("../Models/User");
 const Product = require("../Models/Product");
 const Category = require("../Models/Category");
 const upload = require("../upload/upload");
-const { applyDynamicConditions } = require('../Utils/dynamicCondition');  // Import the dynamic condition utility
 // Dynamically load the model for the collection
 const loadModel = (collection) => {
     switch (collection.toLowerCase()) {
@@ -18,6 +17,7 @@ const loadModel = (collection) => {
             return null;
     }
 };
+
 
 // Dynamic CRUD operations for any collection
 const dynamicCrudController = (collection) => {

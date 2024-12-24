@@ -1,7 +1,9 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const User = require("../Models/User");
 const Product = require("../Models/Product");
 const Category = require("../Models/Category");
+const Delivery = require("../Models/Delivery");
+const Cart = require("../Models/Carts");
 const upload = require("../upload/upload");
 // Dynamically load the model for the collection
 const loadModel = (collection) => {
@@ -12,12 +14,15 @@ const loadModel = (collection) => {
             return Product;
         case "categories":
             return Category;
+        case "deliveries":
+            return Delivery;
+        case "carts":
+            return Cart;
         default:
             console.error(`Model for collection "${collection}" not found.`);
             return null;
     }
 };
-
 
 // Dynamic CRUD operations for any collection
 const dynamicCrudController = (collection) => {
@@ -29,31 +34,41 @@ const dynamicCrudController = (collection) => {
         create: async (req, res) => {
             upload.single("image")(req, res, async (err) => {
                 if (err) {
-                    return res
-                        .status(400)
-                        .json({ error: "Error uploading image", details: err.message });
+                    return res.status(400).json({ error: "Error uploading image", details: err.message });
                 }
 
                 try {
-                    // Create a new item and save the image path
+                    if (!req.body.code) {
+                        req.body.code = "default_code_" + Date.now();
+                    }
+
                     const newItem = new model({
                         ...req.body,
-                        image: req.file ? req.file.path : null, // Save the image path in the model
+                        image: req.file ? req.file.path : null,
                     });
 
                     const savedItem = await newItem.save();
                     res.status(201).json(savedItem);
                 } catch (err) {
-                    res.status(400).json({ error: "Error creating item", details: err });
+                    console.error("Error creating item:", err);
+                    res.status(400).json({ error: "Error creating item", details: err.message });
                 }
             });
-        },
+        }
+        ,
 
         // Get all items
         getAll: async (req, res) => {
             try {
-                const { page = 1, limit = 10, searchColumn = [], ...filters } = req.query;
-                let searchColumnArray = Array.isArray(searchColumn) ? searchColumn : searchColumn.split(',');
+                const {
+                    page = 1,
+                    limit = 10,
+                    searchColumn = [],
+                    ...filters
+                } = req.query;
+                let searchColumnArray = Array.isArray(searchColumn)
+                    ? searchColumn
+                    : searchColumn.split(",");
 
                 // Validate and parse pagination parameters
                 const pageNumber = Math.max(parseInt(page, 10), 1); // Ensure page is at least 1
@@ -70,12 +85,13 @@ const dynamicCrudController = (collection) => {
                 // Handle dynamic search columns (e.g., name, email)
                 if (searchColumnArray.length > 0 && filters.search) {
                     const searchQuery = { $regex: filters.search, $options: "i" };
-                    searchColumnArray.forEach(column => {
+                    searchColumnArray.forEach((column) => {
                         queryConditions.push({ [column]: searchQuery });
                     });
                 }
 
-                const finalQuery = queryConditions.length > 0 ? { $and: queryConditions } : {};
+                const finalQuery =
+                    queryConditions.length > 0 ? { $and: queryConditions } : {};
 
                 // Fetch paginated data
                 const items = await model
@@ -100,7 +116,6 @@ const dynamicCrudController = (collection) => {
                 });
             }
         },
-
 
         // Get a single item by ID
         // getOne: async (req, res) => {
@@ -156,6 +171,69 @@ const dynamicCrudController = (collection) => {
                 res.status(500).json({ error: "Error deleting item", details: err });
             }
         },
+        // addToCart: async (req, res) => {
+        //     try {
+        //         const { userId, productId, quantity } = req.body;
+
+        //         // Validate input
+        //         if (!userId || !productId || !quantity) {
+        //             return res.status(400).json({ error: "userId, productId, and quantity are required" });
+        //         }
+
+        //         // Find the product
+        //         const product = await Product.findById(productId);
+        //         if (!product) {
+        //             return res.status(404).json({ error: "Product not found" });
+        //         }
+
+        //         // Find or create the user's cart
+        //         let cart = await Cart.findOne({ user: userId }).populate('items.product');
+        //         if (!cart) {
+        //             cart = new Cart({
+        //                 user: userId,
+        //                 items: [],
+        //                 totalPrice: 0,
+        //             });
+        //         }
+
+        //         // Check if the product is already in the cart
+        //         const existingItemIndex = cart.items.findIndex(
+        //             (item) => item.product._id.toString() === productId
+        //         );
+
+        //         if (existingItemIndex > -1) {
+        //             // Update the quantity if the product already exists in the cart
+        //             cart.items[existingItemIndex].quantity += quantity;
+        //         } else {
+        //             // Add the new product to the cart
+        //             cart.items.push({ product: productId, quantity });
+        //         }
+
+        //         // Recalculate the total price
+        //         cart.totalPrice = cart.items.reduce((total, item) => {
+        //             // Ensure the product is populated with price
+        //             const itemPrice = item.product.price * item.quantity;
+        //             if (isNaN(itemPrice)) {
+        //                 console.error("Invalid price calculation:", item.product.price, item.quantity);
+        //             }
+        //             return total + itemPrice;
+        //         }, 0);
+
+        //         // Debugging: Check calculated total price
+        //         console.log("Calculated Total Price:", cart.totalPrice);
+
+        //         // Save the updated cart
+        //         const updatedCart = await cart.save();
+
+        //         res.status(200).json(updatedCart);
+        //     } catch (err) {
+        //         console.error("Error adding to cart:", err);
+        //         res.status(500).json({ error: "Error adding to cart", details: err.message });
+        //     }
+        // }
+
+
+
     };
 };
 

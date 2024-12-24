@@ -16,28 +16,27 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        required: true,
-
+        required: false,
     },
     is_reminder: {
         type: Boolean,
-        required: true,
+        required: false,
         default: true,
     },
     status: {
         type: Boolean,
-        required: true,
+        required: false,
         default: true,
     },
     profileImage: {
         type: String,
-        required: false, // Optional field
-        default: null,  // Default to null if no image is provided
+        required: false,
+        default: null,
     },
     phoneNumber: {
         type: String,
-        required: false, // Optional field
-        default: null,  // Default to null if no image is provided
+        required: false,
+        default: null,
     },
 }, { timestamps: true });
 

@@ -13,7 +13,6 @@ const applyDynamicConditions = (filter) => {
             if (mongoose.Types.ObjectId.isValid(value)) {
                 conditions[key] = mongoose.Types.ObjectId(value);
             } else {
-                // If the _id is invalid, handle the error or ignore it
                 console.error(`Invalid ObjectId format for _id: ${value}`);
                 continue;  // Skip this key
             }

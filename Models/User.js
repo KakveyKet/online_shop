@@ -38,6 +38,14 @@ const userSchema = new mongoose.Schema({
         required: false,
         default: null,
     },
+    resetToken: {
+        type: String,
+        default: null
+    },
+    resetedAt: {
+        type: Date,
+        default: null
+    }
 }, { timestamps: true });
 
 userSchema.add({

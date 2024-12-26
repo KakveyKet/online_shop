@@ -45,7 +45,12 @@ const userSchema = new mongoose.Schema({
     resetedAt: {
         type: Date,
         default: null
-    }
+    },
+    location: {
+        type: String,
+        required: false,
+        default: null,
+    },
 }, { timestamps: true });
 
 userSchema.add({

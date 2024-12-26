@@ -26,6 +26,24 @@ const productSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
+    rating: {
+        type: Number,
+        min: 1,
+        max: 5,
+        default: 1
+    },
+    status: {
+        type: Boolean,
+        default: true
+    },
+    is_favorite: {
+        type: Boolean,
+        default: false
+    },
+    capacity: {
+        type: String,
+        required: true,
+    },
     code: { type: String, unique: true },
 
 }, { timestamps: true });

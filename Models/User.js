@@ -28,10 +28,8 @@ const userSchema = new mongoose.Schema({
         required: false,
         default: true,
     },
-    profileImage: {
+    image: {
         type: String,
-        required: false,
-        default: null,
     },
     phoneNumber: {
         type: String,
@@ -42,6 +40,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: null
     },
+
     resetedAt: {
         type: Date,
         default: null
@@ -51,6 +50,11 @@ const userSchema = new mongoose.Schema({
         required: false,
         default: null,
     },
+    token: {
+        type: String,
+        default: null,
+    },
+
 }, { timestamps: true });
 
 userSchema.add({

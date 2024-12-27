@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const { verifyToken, hashPassword } = require('./authHelper');
+
 /**
  * Register a new user
  */
@@ -25,15 +26,28 @@ const register = async (req, res) => {
         const newUser = new User({ name, email, password: hashedPassword, role });
         const savedUser = await newUser.save();
 
+        // Generate a token for the new user
+        const token = jwt.sign(
+            { id: savedUser._id, email: savedUser.email, role: savedUser.role },
+            process.env.JWT_SECRET,
+            { expiresIn: "1h" }
+        );
+
+        // Save the token to the database
+        savedUser.token = token;
+        await savedUser.save();
+
         res.status(201).json({
             message: "User registered successfully.",
             user: { id: savedUser._id, name: savedUser.name, email: savedUser.email, role: savedUser.role },
+            token,
         });
     } catch (err) {
         console.error("Registration error:", err.message || err);
         res.status(500).json({ error: "An error occurred during registration." });
     }
 };
+
 
 /**
  * Login user and generate JWT
@@ -56,11 +70,16 @@ const login = async (req, res) => {
             return res.status(401).json({ error: "Invalid email or password." });
         }
 
+        // Generate a new token
         const token = jwt.sign(
             { id: user._id, email: user.email, role: user.role },
             process.env.JWT_SECRET,
             { expiresIn: "1h" }
         );
+
+        // Save the token to the database
+        user.token = token;
+        await user.save();
 
         console.log('Generated Token:', token);
 
@@ -74,6 +93,7 @@ const login = async (req, res) => {
         res.status(500).json({ error: "An error occurred during login." });
     }
 };
+
 
 /**
  * Logout user
@@ -101,19 +121,97 @@ const sendResetEmail = async (email, name, resetToken) => {
         to: email,
         subject: "Password Reset Request",
         html: `
-          <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333333; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <div style="background-color: #f8f8f8; border-radius: 5px; padding: 20px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-                  <h1 style="color: #2c3e50; text-align: center; margin-bottom: 20px;">Password Reset</h1>
-                  <p style="margin-bottom: 15px;">Hello ${name},</p>
-                  <p style="margin-bottom: 20px;">You requested a password reset. Click the button below to reset your password:</p>
-                  <div style="text-align: center; margin-bottom: 25px;">
-                      <a href="${resetLink}" style="display: inline-block; background-color: #3498db; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 5px; font-weight: bold;">Reset Password</a>
-                  </div>
-                  <p style="margin-bottom: 15px;">If you did not request this, please ignore this email.</p>
-                  <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 25px 0;">
-                  <p style="font-size: 12px; color: #777777; text-align: center;">This is an automated email. Please do not reply.</p>
-              </div>
-          </body>
+         <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Reset</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin-bottom: 0.5rem;
+            color: #555;
+        }
+        input[type="email"] {
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .message {
+            margin-top: 1rem;
+            text-align: center;
+            color: #555;
+        }
+        .reset-link {
+            display: inline-block;
+            background-color: #3498db;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        @media (max-width: 480px) {
+            .container {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Password Reset</h1>
+
+        <div class="message">
+            <p>Hello ${name},</p>
+            <p>You requested a password reset. Click the button below to reset your password:</p>
+            <a href="${resetLink}" class="reset-link">Reset Password</a>
+        </div>
+    </div>
+</body>
+</html>
         `,
     };
 

@@ -15,7 +15,10 @@ const register = async (req, res) => {
         if (!name || !email || !password || !role) {
             return res.status(400).json({ error: "All fields are required." });
         }
-
+        // valide if type not an email
+        if (!email.includes("@")) {
+            return res.status(400).json({ error: "Email is not valid." });
+        }
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ error: "Email is already registered." });
@@ -59,7 +62,10 @@ const login = async (req, res) => {
         if (!email || !password) {
             return res.status(400).json({ error: "Email and password are required." });
         }
-
+        // validate if type not an email
+        if (!email.includes("@")) {
+            return res.status(400).json({ error: "Email is not valid." });
+        }
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(401).json({ error: "Invalid email or password." });

@@ -1,13 +1,21 @@
-FROM node:18-alpine
+# Use Node.js official image
+FROM node:18
 
-WORKDIR /usr/src/app
+# Set working directory
+WORKDIR /app
 
+# Copy package.json and install dependencies
 COPY package*.json ./
+RUN npm install --legacy-peer-deps
 
-RUN npm install
 
+# Copy the rest of the app
 COPY . .
 
-EXPOSE 5000
 
+
+# Expose the app on port 4000
+EXPOSE 3000
+
+# Command to run the app
 CMD ["npm", "start"]

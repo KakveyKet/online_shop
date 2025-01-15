@@ -66,4 +66,4 @@ userSchema.add({
 
 const User = mongoose.model('User', userSchema);
 
-module.exports = User;  // Ensure this line is correct
+module.exports = User;  

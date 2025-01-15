@@ -7,7 +7,7 @@ const DeliverySchema = new mongoose.Schema(
             required: true,
         },
         image: {
-            type: String, // Optional field
+            type: String,
         },
     },
     { timestamps: true }

@@ -4,7 +4,9 @@ const Product = require("../Models/Product");
 const Category = require("../Models/Category");
 const Delivery = require("../Models/Delivery");
 const Cart = require("../Models/Carts");
+const Covers = require("../Models/CoverImageModel");
 const upload = require("../upload/upload");
+
 // Dynamically load the model for the collection
 const loadModel = (collection) => {
     switch (collection.toLowerCase()) {
@@ -18,6 +20,8 @@ const loadModel = (collection) => {
             return Delivery;
         case "carts":
             return Cart;
+        case "covers":
+            return Covers;
         default:
             console.error(`Model for collection "${collection}" not found.`);
             return null;
@@ -66,43 +70,59 @@ const dynamicCrudController = (collection) => {
                     searchColumn = [],
                     ...filters
                 } = req.query;
+
                 let searchColumnArray = Array.isArray(searchColumn)
                     ? searchColumn
                     : searchColumn.split(",");
 
-                // Validate and parse pagination parameters
-                const pageNumber = Math.max(parseInt(page, 10), 1); // Ensure page is at least 1
-                const limitNumber = Math.min(Math.max(parseInt(limit, 10), 1), 100); // Limit between 1 and 100
+                const pageNumber = Math.max(parseInt(page, 10), 1);
+                const limitNumber = Math.min(Math.max(parseInt(limit, 10), 1), 100);
 
-                // Build query conditions
                 const queryConditions = [];
 
-                // Handle status filter
-                if (filters.status) {
-                    queryConditions.push({ status: filters.status === "true" });
-                }
-
-                // Handle dynamic search columns (e.g., name, email)
-                if (searchColumnArray.length > 0 && filters.search) {
-                    const searchQuery = { $regex: filters.search, $options: "i" };
-                    searchColumnArray.forEach((column) => {
-                        queryConditions.push({ [column]: searchQuery });
-                    });
+                for (const [key, value] of Object.entries(filters)) {
+                    if (value) {
+                        if (key === "_id") {
+                            // Convert the _id string to ObjectId
+                            queryConditions.push({ [key]: mongoose.Types.ObjectId(value) });
+                        } else if (key === "search" && searchColumnArray.length > 0) {
+                            const searchQuery = { $regex: String(value), $options: "i" };
+                            const orConditions = searchColumnArray.map((column) => ({
+                                [column]: searchQuery,
+                            }));
+                            queryConditions.push({ $or: orConditions });
+                        } else if (value.includes("||")) {
+                            const orConditions = value
+                                .split("||")
+                                .map((val) => ({ [key]: val.trim() }));
+                            queryConditions.push({ $or: orConditions });
+                        } else if (value.includes("&&")) {
+                            const andConditions = value
+                                .split("&&")
+                                .map((val) => ({ [key]: val.trim() }));
+                            queryConditions.push({ $and: andConditions });
+                        } else if (!isNaN(value)) {
+                            queryConditions.push({ [key]: Number(value) });
+                        } else if (value === "true" || value === "false") {
+                            queryConditions.push({ [key]: value === "true" });
+                        } else {
+                            queryConditions.push({
+                                [key]: { $regex: String(value), $options: "i" },
+                            });
+                        }
+                    }
                 }
 
                 const finalQuery =
                     queryConditions.length > 0 ? { $and: queryConditions } : {};
 
-                // Fetch paginated data
                 const items = await model
                     .find(finalQuery)
                     .skip((pageNumber - 1) * limitNumber)
                     .limit(limitNumber);
 
-                // Count total items
                 const totalItems = await model.countDocuments(finalQuery);
 
-                // Respond with paginated data
                 res.status(200).json({
                     data: items,
                     currentPage: pageNumber,
@@ -115,7 +135,10 @@ const dynamicCrudController = (collection) => {
                     details: err.message,
                 });
             }
-        },
+        }
+        ,
+
+
 
         // Get a single item by ID
         // getOne: async (req, res) => {

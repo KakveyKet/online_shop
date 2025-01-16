@@ -1,10 +1,11 @@
 const express = require('express');
 const dynamicCrudController = require('../Controller/DynamicController');
+const checkout = require('../Controller/checkoutController');
 const cartController = require('../Controller/CartController');
 const router = express.Router();
 
 // Define collections to handle
-const collections = ['users', 'products', 'categories', 'deliveries', 'carts', 'covers'];
+const collections = ['users', 'products', 'categories', 'deliveries', 'carts', 'covers', 'checkouts'];
 
 collections.forEach((collection) => {
     const controller = dynamicCrudController(collection);
@@ -14,6 +15,7 @@ collections.forEach((collection) => {
         router.patch(`/${collection}/:id`, controller.update);
         router.delete(`/${collection}/:id`, controller.delete);
         router.post('/carts', cartController.addToCart);
+        router.post('/checkout', checkout.checkout)
     }
 });
 

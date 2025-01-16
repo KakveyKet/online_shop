@@ -5,6 +5,7 @@ const Category = require("../Models/Category");
 const Delivery = require("../Models/Delivery");
 const Cart = require("../Models/Carts");
 const Covers = require("../Models/CoverImageModel");
+const CheckOut = require("../Models/CheckOut");
 const upload = require("../upload/upload");
 
 // Dynamically load the model for the collection
@@ -22,6 +23,8 @@ const loadModel = (collection) => {
             return Cart;
         case "covers":
             return Covers;
+        case "checkouts":
+            return CheckOut;
         default:
             console.error(`Model for collection "${collection}" not found.`);
             return null;

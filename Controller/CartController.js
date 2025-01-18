@@ -3,7 +3,7 @@ const Product = require('../Models/Product');
 
 const addToCart = async (req, res) => {
     try {
-        const { userId, productId, quantity } = req.body;
+        const { userId, productId, quantity, userName } = req.body;
 
         // Validate input
         if (!userId || !productId || !quantity) {
@@ -25,6 +25,7 @@ const addToCart = async (req, res) => {
         if (!cart) {
             cart = new Cart({
                 user: userId,
+                userName: userName,
                 items: [],
                 totalPrice: 0,
             });

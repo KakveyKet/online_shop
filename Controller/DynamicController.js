@@ -65,36 +65,54 @@ const dynamicCrudController = (collection) => {
         ,
 
         // Get all items
+        // Get all items
         getAll: async (req, res) => {
             try {
                 const {
-                    page = 1,
-                    limit = 10,
-                    searchColumn = [],
-                    ...filters
+                    page = 1, // Default page is 1
+                    limit = 10, // Default limit is 10 items per page
+                    searchColumn = [], // Columns to search in
+                    ...filters // Additional filters (e.g., search term, userId)
                 } = req.query;
 
-                let searchColumnArray = Array.isArray(searchColumn)
+                // Convert searchColumn to an array if it's a string
+                const searchColumnArray = Array.isArray(searchColumn)
                     ? searchColumn
                     : searchColumn.split(",");
 
+                // Calculate pagination
                 const pageNumber = Math.max(parseInt(page, 10), 1);
                 const limitNumber = Math.min(Math.max(parseInt(limit, 10), 1), 100);
 
+                // Prepare query conditions
                 const queryConditions = [];
 
+                // Loop through all filters
                 for (const [key, value] of Object.entries(filters)) {
                     if (value) {
+                        // Handle _id field, convert to ObjectId if necessary
                         if (key === "_id") {
-                            // Convert the _id string to ObjectId
                             queryConditions.push({ [key]: mongoose.Types.ObjectId(value) });
-                        } else if (key === "search" && searchColumnArray.length > 0) {
-                            const searchQuery = { $regex: String(value), $options: "i" };
-                            const orConditions = searchColumnArray.map((column) => ({
-                                [column]: searchQuery,
-                            }));
-                            queryConditions.push({ $or: orConditions });
-                        } else if (value.includes("||")) {
+                        }
+                        // Handle search term for string fields
+                        else if (key === "search" && searchColumnArray.length > 0) {
+                            const searchQuery = String(value).trim();
+                            if (searchQuery) {
+                                const orConditions = searchColumnArray.map((column) => {
+                                    const fieldParts = column.split(".");
+                                    // Check if the field is a nested field
+                                    if (fieldParts.length > 1) {
+                                        return {
+                                            [column]: { $regex: searchQuery, $options: "i" },
+                                        };
+                                    }
+                                    return { [column]: { $regex: searchQuery, $options: "i" } };
+                                });
+                                queryConditions.push({ $or: orConditions });
+                            }
+                        }
+                        // Handle logical conditions (OR/AND)
+                        else if (value.includes("||")) {
                             const orConditions = value
                                 .split("||")
                                 .map((val) => ({ [key]: val.trim() }));
@@ -104,28 +122,43 @@ const dynamicCrudController = (collection) => {
                                 .split("&&")
                                 .map((val) => ({ [key]: val.trim() }));
                             queryConditions.push({ $and: andConditions });
-                        } else if (!isNaN(value)) {
-                            queryConditions.push({ [key]: Number(value) });
-                        } else if (value === "true" || value === "false") {
+                        }
+                        // Handle boolean values
+                        else if (value === "true" || value === "false") {
                             queryConditions.push({ [key]: value === "true" });
-                        } else {
+                        }
+                        // Handle numbers or other types
+                        else if (!isNaN(value)) {
+                            queryConditions.push({ [key]: Number(value) });
+                        }
+                        // For other string fields, apply $regex only if it's a string
+                        else if (typeof value === "string") {
                             queryConditions.push({
                                 [key]: { $regex: String(value), $options: "i" },
                             });
                         }
+                        // Default case: directly use the value
+                        else {
+                            queryConditions.push({ [key]: value });
+                        }
                     }
                 }
 
-                const finalQuery =
-                    queryConditions.length > 0 ? { $and: queryConditions } : {};
+                // Final query condition
+                const finalQuery = queryConditions.length > 0 ? { $and: queryConditions } : {};
 
+                console.log("Final Query:", JSON.stringify(finalQuery, null, 2)); // Debugging
+
+                // Fetch data with pagination
                 const items = await model
                     .find(finalQuery)
                     .skip((pageNumber - 1) * limitNumber)
                     .limit(limitNumber);
 
+                // Count total items
                 const totalItems = await model.countDocuments(finalQuery);
 
+                // Send response
                 res.status(200).json({
                     data: items,
                     currentPage: pageNumber,
@@ -133,12 +166,15 @@ const dynamicCrudController = (collection) => {
                     totalItems,
                 });
             } catch (err) {
+                console.error("Error in getAll:", err.message); // Debugging
                 res.status(500).json({
                     error: "Error fetching items",
                     details: err.message,
                 });
             }
         }
+
+
         ,
 
 

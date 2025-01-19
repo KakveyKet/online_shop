@@ -57,7 +57,10 @@ const addToCart = async (req, res) => {
         // Populate product details and recalculate total price
         cart = await Cart.findById(cart._id).populate('items.product');
         cart.totalPrice = cart.items.reduce((total, item) => {
-            const itemPrice = item.product.price * item.quantity;
+            const discountMultiplier = item.product.discount
+                ? (1 - item.product.discount / 100)
+                : 1; // Calculate the discount multiplier (e.g., 20% discount = 0.8)
+            const itemPrice = item.product.price * item.quantity * discountMultiplier;
             return total + itemPrice;
         }, 0);
 

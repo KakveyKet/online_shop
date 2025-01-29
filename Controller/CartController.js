@@ -89,11 +89,20 @@ const updateCartItem = async (req, res) => {
         } else {
             return res.status(400).json({ error: "Invalid action or quantity too low" });
         }
+
+        // Recalculate total price
         cart.totalPrice = cart.items.reduce((total, item) => {
             const discountMultiplier = 1 - (item.discount / 100 || 0); // Ensure discount is applied correctly as a percentage
             return total + (item.price * item.quantity * discountMultiplier);
         }, 0);
 
+        // Check if all items have quantity 0, if so, delete the cart
+        const allItemsZero = cart.items.every(item => item.quantity === 0);
+
+        if (allItemsZero) {
+            await Cart.deleteOne({ user: userId });
+            return res.status(200).json({ message: "Cart is empty and has been deleted" });
+        }
 
         // Save the updated cart
         await cart.save();
@@ -102,6 +111,7 @@ const updateCartItem = async (req, res) => {
         res.status(500).json({ error: "Error updating cart item", details: err.message });
     }
 };
+
 
 
 module.exports = { addToCart, updateCartItem };

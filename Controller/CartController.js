@@ -64,8 +64,6 @@ const addToCart = async (req, res) => {
         res.status(500).json({ error: "Error adding to cart", details: err.message });
     }
 };
-
-
 // Remove item or decrement quantity
 const updateCartItem = async (req, res) => {
     try {
@@ -86,12 +84,11 @@ const updateCartItem = async (req, res) => {
             cart.items[itemIndex].quantity += 1;
         } else if (action === "decrement" && cart.items[itemIndex].quantity > 1) {
             cart.items[itemIndex].quantity -= 1;
+        } else if (action === "remove") {
+            cart.items.splice(itemIndex, 1);
         } else {
             return res.status(400).json({ error: "Invalid action or quantity too low" });
         }
-
-        // Recalculate total price
-        // Recalculate total price after adding an item or updating quantity
         cart.totalPrice = cart.items.reduce((total, item) => {
             const discountMultiplier = 1 - (item.discount / 100 || 0); // Ensure discount is applied correctly as a percentage
             return total + (item.price * item.quantity * discountMultiplier);

@@ -96,13 +96,13 @@ const updateCartItem = async (req, res) => {
             return total + (item.price * item.quantity * discountMultiplier);
         }, 0);
 
-        // Check if all items have quantity 0, if so, delete the cart
-        const allItemsZero = cart.items.every(item => item.quantity === 0);
+        // // Check if all items have quantity 0, if so, delete the cart
+        // const allItemsZero = cart.items.every(item => item.quantity === 0);
 
-        if (allItemsZero) {
-            await Cart.deleteOne({ user: userId });
-            return res.status(200).json({ message: "Cart is empty and has been deleted" });
-        }
+        // if (allItemsZero) {
+        //     await Cart.deleteOne({ user: userId });
+        //     return res.status(200).json({ message: "Cart is empty and has been deleted" });
+        // }
 
         // Save the updated cart
         await cart.save();

@@ -2,7 +2,7 @@ const express = require('express');
 const dynamicCrudController = require('../Controller/DynamicController');
 const checkout = require('../Controller/checkoutController');
 const cartController = require('../Controller/CartController');
-
+const { toggleFavorite } = require('../Controller/FavController');
 const router = express.Router();
 
 // Define collections to handle
@@ -17,7 +17,8 @@ collections.forEach((collection) => {
         router.delete(`/${collection}/:id`, controller.delete);
         router.post('/carts', cartController.addToCart);  // Add item or increase quantity
         router.patch('/carts/update', cartController.updateCartItem);  // Update item quantity or remove
-        router.post('/checkout', checkout.checkout)
+        router.post('/checkout', checkout.checkout);
+        router.post('/products/:productId/favorite', toggleFavorite);
     }
 });
 
